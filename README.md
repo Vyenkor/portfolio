@@ -8,9 +8,9 @@
 
 项目根目录包含以下主要子目录与文件：
 
-config/
+## config/
 
-assets.json：资产配置文件，用于列出需要跟踪的基金代码、加密货币名称以及计价币种。修改该文件即可增删要监控的标的，脚本会自动读取并生成对应数据。文件格式示例如下：
+### assets.json：资产配置文件，用于列出需要跟踪的基金代码、加密货币名称以及计价币种。修改该文件即可增删要监控的标的，脚本会自动读取并生成对应数据。文件格式示例如下：
 
 {
   "funds": ["017436", "001186"],
@@ -19,17 +19,17 @@ assets.json：资产配置文件，用于列出需要跟踪的基金代码、加
 }
 
 
-字段说明：
+### 字段说明：
 
-funds：需要获取数据的基金代码列表，使用天天基金的 6 位基金代码。
+#### funds：需要获取数据的基金代码列表，使用天天基金的 6 位基金代码。
 
-coins：需要获取价格的加密货币名称，使用 CoinGecko 的 ID（如 bitcoin、ethereum 等）。
+#### coins：需要获取价格的加密货币名称，使用 CoinGecko 的 ID（如 bitcoin、ethereum 等）。
 
-vs：计价币种列表，例如 cny 或 usd，脚本会对每个币种生成报价。
+#### vs：计价币种列表，例如 cny 或 usd，脚本会对每个币种生成报价。
 
-src/
+## src/
 
-aggregate.py：数据聚合脚本，使用 requests 库从第三方接口拉取数据并生成 CSV 文件。脚本会读取 config/assets.json 中的基金代码和加密货币信息：
+### aggregate.py：数据聚合脚本，使用 requests 库从第三方接口拉取数据并生成 CSV 文件。脚本会读取 config/assets.json 中的基金代码和加密货币信息：
 
 通过 DoctorXiong
  接口或天天基金页面接口获取基金的最新净值（nav）、估算净值（est_nav）和 24 小时估算涨跌幅（est_chg_24h_pct）。如果 DoctorXiong 接口不可用，则回退至天天基金 fundgz API。
@@ -37,13 +37,13 @@ aggregate.py：数据聚合脚本，使用 requests 库从第三方接口拉取�
 通过 CoinGecko
  的 /coins/markets 接口获取加密货币的现价 (current_price) 及多周期涨跌幅（1h、24h、7d、30d 等）。
 
-生成两个 CSV：
+### 生成两个 CSV：
 
 data/agg_latest.csv：最新快照，包含基金和加密货币的最新价格和估算涨跌幅。
 
 data/history.csv：历史数据累积表，脚本运行时会在该文件末尾追加一行，保存时间戳、标的价格和涨跌幅，供长期追踪。
 
-脚本的核心流程如下：
+## 脚本的核心流程如下：
 
 读取 config/assets.json 获取基金代码、加密货币 ID 和计价币种列表。
 
@@ -55,7 +55,7 @@ data/history.csv：历史数据累积表，脚本运行时会在该文件末尾�
 
 在本地运行该脚本或由 GitHub Actions 定时运行即可生成最新数据文件。
 
-.github/workflows/
+## .github/workflows/
 
 daily-fetch.yml：GitHub Actions 工作流文件，用于设置自动化任务。工作流配置了以下功能：
 
@@ -67,7 +67,7 @@ daily-fetch.yml：GitHub Actions 工作流文件，用于设置自动化任务�
 
 通过编辑此文件，可以调整任务运行频率，例如每小时、每天或每周运行一次。也可以通过 workflow_dispatch 手动触发。
 
-data/
+## data/
 
 此目录用于存放脚本生成的数据文件：
 
@@ -77,11 +77,11 @@ history.csv：历史数据文件，脚本每次运行时在该文件末尾追加
 
 .gitkeep：空文件，用于确保空目录被纳入版本控制（git 会忽略空目录，因此通过添加 .gitkeep 保持目录存在）。
 
-requirements.txt
+## requirements.txt
 
 列出了项目的 Python 依赖包。目前仅包含 requests 库，用于执行 HTTP 请求。如果将来添加其他第三方库，应在此文件中列出。
 
-使用说明
+## 使用说明
 
 修改 config/assets.json 根据你的需求添加或删除基金代码和加密货币 ID，指定需要的计价币种。
 
