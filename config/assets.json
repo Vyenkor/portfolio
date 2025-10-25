@@ -1,9 +1,6 @@
 {
   "funds": ["017436", "004253"],
-  "coins": ["bitcoin", "ethereum", "Tether"],
-  "vs": ["cny"]
-  "headers_lang": "zh"   // 加这一行，写 "zh" 就会输出中文表头；不写默认英文
+  "coins": ["bitcoin", "ethereum", "tether"],
+  "vs": ["cny"],
+  "headers_lang": "zh"
 }
-
-
-
