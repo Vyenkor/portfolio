@@ -170,11 +170,12 @@ def main():
     coin_rows_by_vs={}
     for vs in cfg.get("vs",["usd"]):
         coin_rows_by_vs[vs]=cg_markets(cfg.get("coins",[]), vs)
-    write_latest(funds, coin_rows_by_vs)
-    append_history(funds, coin_rows_by_vs)
+    write_latest(cfg, funds, coins_by_vs)
+    append_history(cfg, funds, coins_by_vs)
     print("OK: agg_latest.csv & history.csv written/appended.")
 
 if __name__=="__main__":
     main()
+
 
 
