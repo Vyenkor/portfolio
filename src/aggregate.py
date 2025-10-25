@@ -17,42 +17,59 @@ def load_cfg():
 # ---------- Fund helpers (天天基金/DoctorXiong) ----------
 def fetch_fund_doctorxiong(code):
     url = f"https://api.doctorxiong.club/v1/fund?code={code}"
-    r = requests.get(url, timeout=12)
-    if r.ok:
-        jd = r.json(); d = jd.get("data") or {}
-        if d:
-            return {
-                "type":"fund", "id":code,
-                "name": d.get("name") or d.get("fund_name"),
-                "nav_date": d.get("jzrq") or d.get("date"),
-                "nav": d.get("dwjz") or d.get("net_value"),
-                "est_nav": d.get("gsz") or d.get("estimate"),
-                "est_chg_24h_pct": d.get("gszzl") or d.get("percent")
-            }
+    try:
+        r = requests.get(url, timeout=8, headers={"User-Agent":"Mozilla/5.0"})
+        if r.ok:
+            jd = r.json(); d = jd.get("data") or {}
+            if d:
+                return {
+                    "type":"fund","id":code,
+                    "name": d.get("name") or d.get("fund_name"),
+                    "nav_date": d.get("jzrq") or d.get("date"),
+                    "nav": d.get("dwjz") or d.get("net_value"),
+                    "est_nav": d.get("gsz") or d.get("estimate"),
+                    "est_chg_24h_pct": d.get("gszzl") or d.get("percent")
+                }
+    except Exception:
+        return None
+    return None
+
 
 def fetch_fund_fundgz(code):
     url = f"https://fundgz.1234567.com.cn/js/{code}.js"
-    r = requests.get(url, timeout=12)
-    t = r.text.strip()
-    if t.startswith("jsonpgz(") and t.endswith(");"):
-        body = t[t.find("(")+1:-2].strip()
-        if body and body != "{}":
-            d = json.loads(body)
-            return {
-                "type":"fund", "id":code,
-                "name": d.get("name"),
-                "nav_date": d.get("jzrq"),
-                "nav": d.get("dwjz"),
-                "est_nav": d.get("gsz"),
-                "est_chg_24h_pct": d.get("gszzl")
+    try:
+        r = requests.get(
+            url, timeout=8,
+            headers={
+                "User-Agent": "Mozilla/5.0",
+                "Referer": "https://fund.eastmoney.com"
             }
+        )
+        t = r.text.strip()
+        if t.startswith("jsonpgz(") and t.endswith(");"):
+            body = t[t.find("(")+1:-2].strip()
+            if body and body != "{}":
+                d = json.loads(body)
+                return {
+                    "type":"fund","id":code,
+                    "name": d.get("name"),
+                    "nav_date": d.get("jzrq"),
+                    "nav": d.get("dwjz"),
+                    "est_nav": d.get("gsz"),
+                    "est_chg_24h_pct": d.get("gszzl")
+                }
+    except Exception:
+        return None
+    return None
 
 def fetch_funds(codes):
     out=[]
     for c in codes:
-        it = fetch_fund_doctorxiong(c) or fetch_fund_fundgz(c)
+        # 先 fundgz（GitHub Actions 上更稳定），再 DoctorXiong
+        it = fetch_fund_fundgz(c) or fetch_fund_doctorxiong(c)
         if it: out.append(it)
     return out
+
 
 # ---------- CoinGecko helpers ----------
 def cg_markets(ids, vs):
@@ -128,3 +145,4 @@ def main():
 
 if __name__=="__main__":
     main()
+
