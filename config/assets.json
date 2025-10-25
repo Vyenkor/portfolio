@@ -1,5 +1,6 @@
 {
-  "funds": ["017436", "001186"],         // 天天基金代码（6位）
+  "funds": ["017436", "004253"],         // 天天基金代码（6位）
   "coins": ["bitcoin", "ethereum"],      // CoinGecko 的 id（示例：bitcoin/ethereum/solana…）
   "vs": ["cny", "usd"]                   // 想看的计价币种
 }
+
