@@ -10,6 +10,15 @@ CFG = ROOT / "config" / "assets.json"
 AGG = DATA / "agg_latest.csv"      # 最新快照（Excel 订阅它）
 HIST = DATA / "history.csv"        # 历史累计（每天/每小时追加）
 
+# 英/中文表头映射（顺序与当前CSV一致）
+HEADERS_EN = ["kind","id","name","nav_date_or_ts","nav_or_price","chg_24h_pct","vs","ts_utc"]
+HEADERS_ZH = ["类型","标的ID/代码","名称","净值日期/时间","价格/净值","24h涨跌幅(%)","计价币种","抓取时间(UTC)"]
+
+def pick_headers(cfg):
+    lang = (cfg.get("headers_lang", "en")).lower()  # 在 config/assets.json 里写 "headers_lang": "zh"
+    return HEADERS_ZH if lang.startswith("zh") else HEADERS_EN
+
+
 def load_cfg():
     with open(CFG, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -101,37 +110,59 @@ def ensure_hist_header():
                 "nav_or_price","chg_24h_pct","vs"
             ])
 
-def write_latest(fund_rows, coin_rows_by_vs):
-    headers = [
-        "kind","id","name","nav_date_or_ts",
-        "nav_or_price","chg_24h_pct","vs","ts_utc"
-    ]
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    with open(AGG,"w",newline="",encoding="utf-8") as f:
-        w = csv.writer(f); w.writerow(headers)
-        # funds（估算净值优先）
-        for r in fund_rows:
-            w.writerow(["fund", r["id"], r.get("name"), r.get("nav_date"),
-                        r.get("est_nav") or r.get("nav"), r.get("est_chg_24h_pct"), "", now])
-        # coins（按 vs 写多行）
-        for vs, arr in coin_rows_by_vs.items():
-            for it in arr:
-                w.writerow(["crypto", it["id"], it["name"], now,
-                            it.get("current_price"), it.get("price_change_percentage_24h_in_currency"),
-                            vs, now])
-
-def append_history(fund_rows, coin_rows_by_vs):
-    ensure_hist_header()
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    with open(HIST,"a",newline="",encoding="utf-8") as f:
+def write_latest(cfg, fund_rows, coin_rows_by_vs):
+    from datetime import datetime
+    headers = pick_headers(cfg)
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    path = Path("data/agg_latest.csv")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8-sig") as f:  # utf-8-sig 给Excel更友好
         w = csv.writer(f)
+        w.writerow(headers)
+        # 基金
         for r in fund_rows:
-            w.writerow([now,"fund",r["id"],r.get("name"),r.get("nav_date"),
-                        r.get("est_nav") or r.get("nav"), r.get("est_chg_24h_pct"), "" ])
+            w.writerow([
+                r.get("type"), r.get("id"), r.get("name"),
+                r.get("nav_date"), r.get("nav"),
+                r.get("est_chg_24h_pct"), None, now
+            ])
+        # 加密币（逐个vs）
         for vs, arr in coin_rows_by_vs.items():
             for it in arr:
-                w.writerow([now,"crypto",it["id"],it["name"],now,
-                            it.get("current_price"), it.get("price_change_percentage_24h_in_currency"), vs])
+                w.writerow([
+                    "crypto", it.get("id"), it.get("name"),
+                    now, it.get("current_price"),
+                    it.get("price_change_percentage_24h"),
+                    vs, now
+                ])
+
+def append_history(cfg, fund_rows, coin_rows_by_vs):
+    from datetime import datetime
+    headers = pick_headers(cfg)
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    path = Path("data/history.csv")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    file_exists = path.exists()
+    with path.open("a", newline="", encoding="utf-8-sig") as f:
+        w = csv.writer(f)
+        if not file_exists:
+            w.writerow(headers)
+        # 基金
+        for r in fund_rows:
+            w.writerow([
+                r.get("type"), r.get("id"), r.get("name"),
+                r.get("nav_date"), r.get("nav"),
+                r.get("est_chg_24h_pct"), None, now
+            ])
+        # 加密币
+        for vs, arr in coin_rows_by_vs.items():
+            for it in arr:
+                w.writerow([
+                    "crypto", it.get("id"), it.get("name"),
+                    now, it.get("current_price"),
+                    it.get("price_change_percentage_24h"),
+                    vs, now
+                ])
 
 def main():
     cfg = load_cfg()
@@ -145,4 +176,5 @@ def main():
 
 if __name__=="__main__":
     main()
+
 
