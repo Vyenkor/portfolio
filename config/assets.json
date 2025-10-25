@@ -1,5 +1,6 @@
 {
   "funds": ["017436", "004253"],
   "coins": ["bitcoin", "ethereum"],
-  "vs": ["cny", "usd"]
+  "vs": ["cny"]
 }
+
