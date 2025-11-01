@@ -145,10 +145,6 @@ requests
 - 📈 开发可视化界面
 - 🔔 设置价格告警机制
 
-## 许可证
-
-MIT License
-
 ## 贡献
 
 欢迎提交 Issue 和 Pull Request！
